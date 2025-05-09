@@ -1,0 +1,21 @@
+{
+  "folders": [
+    {
+      "path": "Assets"
+    },
+    {
+      "path": "Packages"
+    },
+    {
+      "path": "Library/PackageCache"
+    }
+  ],
+  "settings": {},
+  "mcp": {
+    "servers": {
+      "unity": {
+        "url": "http://localhost/6500"
+      }
+    }
+  }
+}
