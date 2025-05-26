@@ -248,7 +248,7 @@ public class AuthenticationFormSetup : MonoBehaviour
         
         // Use a circular image for the spinner
         spinnerImage.color = Color.white;
-        spinnerImage.sprite = EditorGUIUtility.whiteTexture; // Just a placeholder
+        spinnerImage.sprite = Sprite.Create(EditorGUIUtility.whiteTexture, new Rect(0, 0, EditorGUIUtility.whiteTexture.width, EditorGUIUtility.whiteTexture.height), new Vector2(0.5f, 0.5f)); // Just a placeholder
         
         // Add a text saying "Loading..."
         GameObject loadingTextObj = CreateTextObject("LoadingText", loadingObj.transform, "Loading...", 18);
