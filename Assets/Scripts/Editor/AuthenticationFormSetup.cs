@@ -31,12 +31,24 @@ public class AuthenticationFormSetup : MonoBehaviour
                 eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             }
         }
-        
-        // Create the Authentication Manager
+          // Create the Authentication Manager
         GameObject authManagerObj = new GameObject("AuthenticationManager");
         AuthenticationManager authManager = authManagerObj.AddComponent<AuthenticationManager>();
         UserDataHandler dataHandler = authManagerObj.AddComponent<UserDataHandler>();
         UserNetworkManager networkManager = authManagerObj.AddComponent<UserNetworkManager>();
+        
+        // Load the AuthenticationConfig
+        AuthenticationConfig config = Resources.Load<AuthenticationConfig>("AuthenticationConfig");
+        if (config == null)
+        {
+            // Create the config if it doesn't exist
+            Debug.Log("Authentication Config not found. Creating a new one...");
+            AuthenticationConfigSetup.SetupAuthenticationConfig();
+            config = Resources.Load<AuthenticationConfig>("AuthenticationConfig");
+        }
+        
+        // Assign the config to the AuthenticationManager
+        authManager.config = config;
         
         // Create the Authentication UI Container
         GameObject authUIContainer = new GameObject("AuthenticationUI");

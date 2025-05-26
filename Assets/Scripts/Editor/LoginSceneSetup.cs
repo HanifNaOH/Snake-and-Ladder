@@ -15,12 +15,21 @@ public class LoginSceneSetup : MonoBehaviour
         // Check if Login scene exists
         string loginScenePath = "Assets/Scenes/Login.unity";
         
+        // Check if AuthenticationConfig exists, create it if not
+        AuthenticationConfig config = Resources.Load<AuthenticationConfig>("AuthenticationConfig");
+        if (config == null)
+        {
+            // Create the config
+            Debug.Log("Authentication Config not found. Creating a new one...");
+            AuthenticationConfigSetup.SetupAuthenticationConfig();
+        }
+        
         // Open the Login scene
         EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
         EditorSceneManager.OpenScene(loginScenePath, OpenSceneMode.Single);
         
         // Check if AuthenticationManager already exists in the scene
-        AuthenticationManager existingAuthManager = Object.FindObjectOfType<AuthenticationManager>();
+        AuthenticationManager existingAuthManager = Object.FindFirstObjectByType<AuthenticationManager>();
         if (existingAuthManager != null)
         {
             Debug.Log("Authentication system already exists in the Login scene.");
@@ -36,19 +45,14 @@ public class LoginSceneSetup : MonoBehaviour
         
         Debug.Log("Login scene setup completed successfully!");
     }
-    
-    [MenuItem("Snake and Ladder/Connect Login to Gameplay")]
+      [MenuItem("Snake and Ladder/Connect Login to Gameplay")]
     public static void ConnectLoginToGameplay()
     {
-        // Check if Gameplay scene exists
-        string gameplayScenePath = "Assets/Scenes/Gameplay.unity";
-        
         // Make sure both scenes are included in build settings
         AddSceneToBuildSettings("Assets/Scenes/Login.unity");
         AddSceneToBuildSettings("Assets/Scenes/Gameplay.unity");
-        
-        // Find the AuthenticationManager in the current scene
-        AuthenticationManager authManager = Object.FindObjectOfType<AuthenticationManager>();
+          // Find the AuthenticationManager in the current scene
+        AuthenticationManager authManager = Object.FindFirstObjectByType<AuthenticationManager>();
         if (authManager == null)
         {
             Debug.LogError("AuthenticationManager not found in the scene! Please run 'Setup Login Scene' first.");

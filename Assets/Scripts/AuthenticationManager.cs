@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using System.Collections;
+using UnityEngine.Networking;
 
 public class AuthenticationManager : MonoBehaviour
 {
@@ -27,9 +28,9 @@ public class AuthenticationManager : MonoBehaviour
     public TextMeshProUGUI signInErrorText;
     public Button switchToSignUpButton;
     
-    [Header("API Settings")]
-    public string signUpApiUrl = "https://your-api-endpoint.com/signup";
-    public string signInApiUrl = "https://your-api-endpoint.com/signin";
+    [Header("Configuration")]
+    [Tooltip("Reference to the Authentication Config asset. If left empty, the system will look for it in Resources folder.")]
+    public AuthenticationConfig config;
     
     private UserNetworkManager networkManager;
     private UserDataHandler userDataHandler;
@@ -37,9 +38,20 @@ public class AuthenticationManager : MonoBehaviour
     // Store user session data
     private string currentUserEmail;
     private bool isAuthenticated = false;
-    
-    void Awake()
+      void Awake()
     {
+        // Load config if not set
+        if (config == null)
+        {
+            config = Resources.Load<AuthenticationConfig>("AuthenticationConfig");
+            if (config == null)
+            {
+                Debug.LogWarning("Authentication Config not found! Please create one via 'Snake and Ladder > Setup Authentication Config'");
+                // Create a default config for now
+                config = ScriptableObject.CreateInstance<AuthenticationConfig>();
+            }
+        }
+        
         // Get or add required components
         networkManager = GetComponent<UserNetworkManager>();
         if (networkManager == null)
@@ -49,8 +61,11 @@ public class AuthenticationManager : MonoBehaviour
         if (userDataHandler == null)
             userDataHandler = gameObject.AddComponent<UserDataHandler>();
         
-        // Set the API URLs
-        userDataHandler.apiUrl = signUpApiUrl;
+        // Set the API URLs and other settings from config
+        userDataHandler.apiUrl = config.signUpApiUrl;
+        userDataHandler.requestTimeout = config.requestTimeout;
+        networkManager.useSecureConnection = config.useSecureConnection;
+        networkManager.maxRetryAttempts = config.maxRetryAttempts;
         
         // Initialize UI state
         if (loadingIndicator) loadingIndicator.SetActive(false);
@@ -163,14 +178,13 @@ public class AuthenticationManager : MonoBehaviour
         // Check if passwords match
         if (signUpPasswordField.text != signUpConfirmPasswordField.text)
             return "Passwords do not match.";
-            
-        // Email validation
+              // Email validation
         if (!IsValidEmail(signUpEmailField.text))
             return "Please enter a valid email address.";
             
-        // Password strength (simple check)
-        if (signUpPasswordField.text.Length < 6)
-            return "Password must be at least 6 characters long.";
+        // Password strength (using config)
+        if (signUpPasswordField.text.Length < config.minimumPasswordLength)
+            return $"Password must be at least {config.minimumPasswordLength} characters long.";
             
         return string.Empty;
     }
@@ -201,13 +215,13 @@ public class AuthenticationManager : MonoBehaviour
     {
         // Hide loading
         if (loadingIndicator) loadingIndicator.SetActive(false);
-        
-        if (success)
+          if (success)
         {
             Debug.Log("Sign-up successful");
             
-            // Auto-fill sign-in form with the email that was just registered
-            if (signInEmailField) signInEmailField.text = currentUserEmail;
+            // Auto-fill sign-in form with the email that was just registered (if enabled in config)
+            if (config.autoFillEmailAfterSignUp && signInEmailField) 
+                signInEmailField.text = currentUserEmail;
             
             // Show sign-in panel
             ShowSignInPanel();
@@ -266,25 +280,63 @@ public class AuthenticationManager : MonoBehaviour
             signInErrorText.gameObject.SetActive(true);
         }
     }
-    
-    private IEnumerator SendSignInRequest(SignInData signInData)
+      private IEnumerator SendSignInRequest(SignInData signInData)
     {
         // Convert to JSON
         string jsonData = JsonUtility.ToJson(signInData);
         
-        // In a real app, this would communicate with your server
-        // For this example, we'll simulate a successful sign-in
+        // Use the network manager to send the sign-in request
+        bool success = false;
+        string response = "";
         
-        // Simulate network delay
-        yield return new WaitForSeconds(1.5f);
+        // Use the configured URL
+        string signInUrl = config.signInApiUrl;
+        
+        using (UnityWebRequest webRequest = new UnityWebRequest(signInUrl, "POST"))
+        {
+            // Set up the request
+            byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
+            webRequest.uploadHandler = new UploadHandlerRaw(jsonToSend);
+            webRequest.downloadHandler = new DownloadHandlerBuffer();
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+            
+            // Send the request
+            Debug.Log($"Sending sign-in request to {signInUrl}");
+            yield return webRequest.SendWebRequest();
+            
+            // Check for network errors
+            if (webRequest.result == UnityWebRequest.Result.ConnectionError ||
+                webRequest.result == UnityWebRequest.Result.DataProcessingError)
+            {
+                Debug.LogError($"Network error: {webRequest.error}");
+                response = $"Network error: {webRequest.error}";
+                success = false;
+            }
+            // Check for HTTP errors
+            else if (webRequest.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError($"HTTP Error: {webRequest.error} - {webRequest.responseCode}");
+                response = $"Server error: {webRequest.responseCode} - {webRequest.downloadHandler.text}";
+                success = false;
+            }
+            // Success
+            else
+            {
+                Debug.Log("Sign-in request successful");
+                response = webRequest.downloadHandler.text;
+                success = true;
+            }
+        }
         
         // Hide loading
         if (loadingIndicator) loadingIndicator.SetActive(false);
         
-        // Simulated successful sign-in
-        // In a real app, you would check server response
-        bool success = true;
-        string response = "{\"success\":true,\"userId\":\"12345\",\"token\":\"example-token\"}";
+        // If this is a demo/prototype and no server is available yet
+        // you can uncomment this to simulate a successful sign-in
+        /*
+        success = true;
+        response = "{\"success\":true,\"userId\":\"12345\",\"token\":\"example-token\"}";
+        */
         
         OnSignInComplete(success, response);
     }

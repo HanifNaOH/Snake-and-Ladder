@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22502da08c4d21944ab4344b804f0087, type: 3}
+  m_Name: AuthenticationConfig_Test
+  m_EditorClassIdentifier: 
+  signUpApiUrl: https://test-api.snakeladder.com/signup
+  signInApiUrl: https://test-api.snakeladder.com/signin
+  useSecureConnection: 1
+  maxRetryAttempts: 3
+  requestTimeout: 10
+  minimumPasswordLength: 6
+  autoFillEmailAfterSignUp: 1
+  enablePasswordToggle: 1

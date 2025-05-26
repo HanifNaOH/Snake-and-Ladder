@@ -14,7 +14,10 @@ public class UserData
 public class UserDataHandler : MonoBehaviour
 {
     [Header("API Settings")]
+    [Tooltip("API endpoint URL for user registration")]
     public string apiUrl = "https://your-api-endpoint.com/signup";
+    
+    [Tooltip("Timeout in seconds for API requests")]
     public float requestTimeout = 10f;
     
     // Reference to the network manager

@@ -6,7 +6,10 @@ using System;
 public class UserNetworkManager : MonoBehaviour
 {
     [Header("Network Settings")]
+    [Tooltip("Use HTTPS instead of HTTP for API requests")]
     public bool useSecureConnection = true;
+    
+    [Tooltip("Number of retry attempts for failed API requests")]
     public int maxRetryAttempts = 3;
     
     // Callback type for sign-up response
